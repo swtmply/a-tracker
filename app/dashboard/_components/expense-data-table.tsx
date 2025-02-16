@@ -1,8 +1,16 @@
 "use client";
 
 import {
+  ColumnDef,
   flexRender,
+  functionalUpdate,
   getCoreRowModel,
+  makeStateUpdater,
+  OnChangeFn,
+  RowData,
+  TableFeature,
+  Table as TanstackTable,
+  Updater,
   useReactTable,
 } from "@tanstack/react-table";
 
@@ -10,27 +18,125 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
 import { Category } from "@/types/budget";
-import { expenseColumns } from "./expense-columns";
+import { useRouter, useSearchParams } from "next/navigation";
+import React from "react";
 
-interface ExpenseDataTableProps {
-  data: Category[];
-  onCellClick: (data: Category, month: string) => void;
+export interface SelectedCellState extends Category {
+  month: string;
 }
 
-export function ExpenseDataTable({ data, onCellClick }: ExpenseDataTableProps) {
+export interface SelectedCellTableState {
+  selectedCell: SelectedCellState;
+}
+
+export interface SelectedCellOptions {
+  enableSelectedCell?: boolean;
+  onSelectedCellChange?: OnChangeFn<SelectedCellState>;
+}
+
+export interface SelectedCellInstance {
+  setSelectedCell: (updater: Updater<SelectedCellState>) => void;
+}
+
+declare module "@tanstack/react-table" {
+  interface TableState extends SelectedCellTableState {
+    x?: string; // filler type for typescript eslint
+  }
+  interface TableOptionsResolved<TData extends RowData>
+    extends SelectedCellOptions {
+    x?: TData; // filler type for typescript eslint
+  }
+  interface Table<TData extends RowData> extends SelectedCellInstance {
+    x?: TData; // filler type for typescript eslint
+  }
+}
+
+const INITIAL_SELECTED_CELL_STATE = {
+  id: 0,
+  expenseId: 0,
+  name: "",
+  totals: {},
+  month: "",
+};
+
+export const SelectedCellFeature: TableFeature<SelectedCellState> = {
+  getInitialState: (state): SelectedCellTableState => {
+    return {
+      selectedCell: INITIAL_SELECTED_CELL_STATE,
+      ...state,
+    };
+  },
+
+  getDefaultOptions: <TData extends RowData>(
+    table: TanstackTable<TData>
+  ): SelectedCellOptions => {
+    return {
+      enableSelectedCell: true,
+      onSelectedCellChange: makeStateUpdater("selectedCell", table),
+    } as SelectedCellOptions;
+  },
+
+  createTable: <TData extends RowData>(table: TanstackTable<TData>): void => {
+    table.setSelectedCell = (updater) => {
+      const safeUpdater: Updater<SelectedCellState> = (old) => {
+        return functionalUpdate(updater, old);
+      };
+      return table.options.onSelectedCellChange?.(safeUpdater);
+    };
+  },
+};
+
+interface ExpenseDataTableProps<TData, TValue> {
+  data: TData[];
+  columns: ColumnDef<TData, TValue>[];
+}
+
+export function ExpenseDataTable<TData, TValue>({
+  columns,
+  data,
+}: ExpenseDataTableProps<TData, TValue>) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const createQueryString = (params: { [key: string]: string | null }) => {
+    const newParams = new URLSearchParams(searchParams);
+    for (const [key, value] of Object.entries(params)) {
+      if (value === null) {
+        newParams.delete(key);
+      } else {
+        newParams.set(key, value);
+      }
+    }
+    return newParams.toString();
+  };
+
   const table = useReactTable({
+    _features: [SelectedCellFeature],
     data,
-    columns: expenseColumns({ onCellClick }),
+    columns,
     getCoreRowModel: getCoreRowModel(),
+    onSelectedCellChange: (data) => {
+      // @ts-expect-error state update only works on setState
+      const selectedCell: SelectedCellState = data();
+
+      router.push(
+        "?" +
+          createQueryString({
+            cId: selectedCell.id.toString(),
+            m: selectedCell.month,
+          })
+      );
+    },
   });
 
   return (
-    <div className="rounded-md border">
+    <div>
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -84,6 +190,31 @@ export function ExpenseDataTable({ data, onCellClick }: ExpenseDataTableProps) {
             </TableRow>
           )}
         </TableBody>
+        <TableFooter>
+          {table.getFooterGroups().map((footerGroup) => (
+            <TableRow key={footerGroup.id}>
+              {footerGroup.headers.map((header) => {
+                return (
+                  <TableCell
+                    key={header.id}
+                    style={{
+                      minWidth: header.column.columnDef.size,
+                      maxWidth: header.column.columnDef.size,
+                    }}
+                    className="font-bold"
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.footer,
+                          header.getContext()
+                        )}
+                  </TableCell>
+                );
+              })}
+            </TableRow>
+          ))}
+        </TableFooter>
       </Table>
     </div>
   );

@@ -1,20 +1,19 @@
 export interface Expense {
+  id: number;
   name: string;
   categories: Category[];
 }
 
 export interface Category {
-  id: string;
+  id: number;
   name: string;
+  expenseId: number;
   totals: {
     [key: string]: number;
   };
-  transactions: Transactions;
 }
 
 export interface Transactions {
-  [key: string]: {
-    name: string;
-    amount: number;
-  }[];
+  name: string;
+  amount: number;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { CellContext, ColumnDef } from "@tanstack/react-table";
+import { CellContext, ColumnDef, HeaderContext } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,24 +15,35 @@ import { Category } from "@/types/budget";
 import { MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface ExpenseColumnsProps<TData> {
-  onCellClick: (data: TData, month: string) => void;
-}
-
-export const expenseColumns = ({
-  onCellClick,
-}: ExpenseColumnsProps<Category>): ColumnDef<Category, unknown>[] => [
+export const expenseColumns: ColumnDef<Category>[] = [
   {
     accessorKey: "name",
     header: "Category",
     size: 200,
+    cell: ({ row }) => {
+      return <p className="text-muted-foreground">{row.original.name}</p>;
+    },
   },
   ...months.map((month) => ({
     id: `totals.${month}`,
     accessorKey: `totals.${month}`,
     header: month.charAt(0).toUpperCase() + month.slice(1),
-    cell: ({ row }: CellContext<Category, unknown>) => {
+    footer: ({ table }: HeaderContext<Category, unknown>) => {
+      const total = table.getFilteredRowModel().rows.reduce((total, row) => {
+        const value: number | undefined = row.getValue(`totals.${month}`);
+
+        if (!value) {
+          return total;
+        }
+
+        return total + value;
+      }, 0);
+
+      return isNaN(total) ? "₱0" : `₱${total.toLocaleString()}`;
+    },
+    cell: ({ row, table }: CellContext<Category, unknown>) => {
       const amount = row.original.totals[month] ?? 0;
+
       return (
         <div
           className={cn(
@@ -40,8 +51,7 @@ export const expenseColumns = ({
             amount === 0 && "cursor-default hover:no-underline"
           )}
           onClick={() => {
-            if (amount === 0) return;
-            onCellClick(row.original, month);
+            table.setSelectedCell({ ...row.original, month });
           }}
         >
           ₱{amount.toLocaleString()}

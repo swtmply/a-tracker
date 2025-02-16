@@ -15,29 +15,31 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useRouter } from "next/navigation";
 
 interface MonthlyExpenseDetailsProps {
   transactions: {
     name: string;
     amount: number;
   }[];
-  onOpenChange: (open: boolean) => void;
 }
 
 export function MonthlyExpenseDetails({
   transactions,
-  onOpenChange,
 }: MonthlyExpenseDetailsProps) {
+  const router = useRouter();
+  const total = transactions.reduce((sum, expense) => sum + expense.amount, 0);
   const open = transactions.length !== 0;
 
-  const handleOpenChange = (newOpen: boolean) => {
-    onOpenChange(newOpen);
-  };
-
-  const total = transactions.reduce((sum, expense) => sum + expense.amount, 0);
-
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(open) => {
+        if (!open) {
+          router.back();
+        }
+      }}
+    >
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Expenses</DialogTitle>
