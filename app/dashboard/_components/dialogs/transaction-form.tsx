@@ -70,7 +70,9 @@ export function TransactionForm({ onClose, expenses }: TransactionFormProps) {
 
   const expenseId = useWatch({ control: form.control, name: "expenseId" });
   const categories =
-    expenses.find((e) => e.id.toString() === expenseId)?.categories || [];
+    expenses
+      .find((e) => e.id.toString() === expenseId)
+      ?.categories.filter((c) => c.id !== 0) || [];
 
   async function onSubmit(data: TransactionFormValues) {
     try {
