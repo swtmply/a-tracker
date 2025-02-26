@@ -5,14 +5,20 @@ import {
   sqliteView,
   text,
 } from "drizzle-orm/sqlite-core";
+import { users } from "./users";
 
 export const expenses = sqliteTable("expenses", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
+  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
 });
 
-export const expensesRelations = relations(expenses, ({ many }) => ({
+export const expensesRelations = relations(expenses, ({ many, one }) => ({
   categories: many(categories),
+  user: one(users, {
+    fields: [expenses.userId],
+    references: [users.id],
+  }),
 }));
 
 export const categories = sqliteTable("categories", {
