@@ -13,7 +13,7 @@ export function LoginForm() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState<boolean>(false);
   const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
+  const [password] = useState<string>("");
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
