@@ -4,7 +4,7 @@ import db from "@/db";
 import { categories, expenses, transactions } from "@/db/schema";
 import { ExpenseWithCategories } from "@/types/budget";
 import { and, eq } from "drizzle-orm";
-import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 const CACHE_TAGS = {
   expenses: "expenses",
@@ -15,86 +15,82 @@ const CACHE_PATHS = {
   dashboard: "/dashboard",
 } as const;
 
-export const getExpenses = unstable_cache(
-  async (): Promise<ExpenseWithCategories[]> => {
-    try {
-      // First, get all expenses with their categories
-      const expensesWithCategories = await db.query.expenses.findMany({
-        with: {
-          categories: {
-            with: {
-              transactions: true,
-            },
+export const getExpenses = async (
+  userId: string
+): Promise<ExpenseWithCategories[]> => {
+  try {
+    const expensesWithCategories = await db.query.expenses.findMany({
+      where: eq(expenses.userId, userId),
+      with: {
+        categories: {
+          with: {
+            transactions: true,
           },
         },
-      });
+      },
+    });
 
-      if (!expensesWithCategories) {
-        throw new Error("Failed to fetch expenses");
-      }
+    if (!expensesWithCategories) {
+      throw new Error("Failed to fetch expenses");
+    }
 
-      const transformedExpenses: ExpenseWithCategories[] =
-        expensesWithCategories.map((expense) => {
-          const categoriesWithTotals = expense.categories.map((category) => {
-            // Calculate totals from transactions
-            const categoryTotals = category.transactions.reduce(
-              (acc, transaction) => {
-                const key = `${transaction.month}_${transaction.year}`;
-                return {
-                  ...acc,
-                  [key]: (acc[key] || 0) + transaction.amount,
-                };
-              },
-              {} as Record<string, number>
-            );
-
-            return {
-              id: category.id,
-              name: category.name,
-              expenseId: category.expenseId,
-              transactions: category.transactions,
-              totals: categoryTotals,
-            };
-          });
+    const transformedExpenses: ExpenseWithCategories[] =
+      expensesWithCategories.map((expense) => {
+        const categoriesWithTotals = expense.categories.map((category) => {
+          // Calculate totals from transactions
+          const categoryTotals = category.transactions.reduce(
+            (acc, transaction) => {
+              const key = `${transaction.month}_${transaction.year}`;
+              return {
+                ...acc,
+                [key]: (acc[key] || 0) + transaction.amount,
+              };
+            },
+            {} as Record<string, number>
+          );
 
           return {
-            id: expense.id,
-            name: expense.name,
-            categories: [
-              ...categoriesWithTotals,
-              {
-                id: 0,
-                name: "Total",
-                expenseId: 0,
-                transactions: [],
-                totals: categoriesWithTotals.reduce((acc, category) => {
-                  Object.entries(category.totals).forEach(([key, value]) => {
-                    acc[key] = (acc[key] || 0) + value;
-                  });
-
-                  return acc;
-                }, {} as Record<string, number>),
-              },
-            ],
+            id: category.id,
+            name: category.name,
+            expenseId: category.expenseId,
+            transactions: category.transactions,
+            totals: categoryTotals,
           };
         });
 
-      return transformedExpenses;
-    } catch (error) {
-      console.error("Error fetching expenses:", error);
-      throw new Error("Failed to fetch expenses");
-    }
-  },
-  ["expenses"],
-  {
-    tags: [CACHE_TAGS.expenses],
-  }
-);
+        return {
+          id: expense.id,
+          name: expense.name,
+          categories: [
+            ...categoriesWithTotals,
+            {
+              id: 0,
+              name: "Total",
+              expenseId: 0,
+              transactions: [],
+              totals: categoriesWithTotals.reduce((acc, category) => {
+                Object.entries(category.totals).forEach(([key, value]) => {
+                  acc[key] = (acc[key] || 0) + value;
+                });
 
-export async function createExpense(name: string) {
+                return acc;
+              }, {} as Record<string, number>),
+            },
+          ],
+        };
+      });
+
+    return transformedExpenses;
+  } catch (error) {
+    console.error("Error fetching expenses:", error);
+    throw new Error("Failed to fetch expenses");
+  }
+};
+
+export async function createExpense(name: string, userId: string) {
   try {
     const existingExpense = await db.query.expenses.findFirst({
-      where: eq(expenses.name, name),
+      where: and(eq(expenses.name, name), eq(expenses.userId, userId)),
     });
 
     if (existingExpense) {
@@ -103,7 +99,10 @@ export async function createExpense(name: string) {
       };
     }
 
-    const expense = await db.insert(expenses).values({ name }).execute();
+    const expense = await db
+      .insert(expenses)
+      .values({ name, userId })
+      .execute();
 
     if (!expense) {
       throw new Error("Failed to create expense");

@@ -16,6 +16,7 @@ import * as z from "zod";
 import { createExpense } from "../../_actions/budget";
 import { toast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import { useSession } from "@/lib/auth-client";
 
 export const expenseSchema = z.object({
   name: z
@@ -38,10 +39,19 @@ export function ExpenseForm({ onClose }: ExpenseFormProps) {
     },
   });
   const router = useRouter();
+  const session = useSession();
 
   async function onSubmit(data: ExpenseFormValues) {
     try {
-      createExpense(data.name);
+      if (!session.data?.user.id) {
+        toast({
+          title: "User not found",
+          description: "Please login first to create an expense.",
+        });
+        return;
+      }
+
+      createExpense(data.name, session.data.user.id);
 
       toast({
         title: "Expense created",

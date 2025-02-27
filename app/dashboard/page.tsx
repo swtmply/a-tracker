@@ -1,13 +1,10 @@
 import { Suspense } from "react";
-import { getExpenses } from "./_actions/budget";
 import {
   BudgetHeader,
   BudgetHeaderFallback,
 } from "./_components/budget-header";
-import {
-  ExpenseTable,
-  ExpenseTableSkeleton,
-} from "./_components/expense-table";
+import { ExpenseTableSkeleton } from "./_components/expense-table";
+import { ExpenseTables } from "./_components/expense-tables";
 
 export default async function BudgetPage() {
   return (
@@ -20,10 +17,4 @@ export default async function BudgetPage() {
       </Suspense>
     </div>
   );
-}
-
-async function ExpenseTables() {
-  const expenses = await getExpenses();
-
-  return <ExpenseTable expenses={expenses} />;
 }
