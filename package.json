@@ -29,7 +29,7 @@
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.39.3",
     "lucide-react": "^0.475.0",
-    "next": "15.1.0",
+    "next": "^15.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-error-boundary": "^5.0.0",
