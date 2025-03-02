@@ -10,6 +10,7 @@ import TransactionDetailsDialog from "./dialogs/transaction-details-dialog";
 interface ExpenseTableProps {
   expenses: ExpenseWithCategories[];
 }
+
 const months = [
   "jan",
   "feb",
@@ -88,15 +89,11 @@ export function ExpenseTable({ expenses }: ExpenseTableProps) {
 export function ExpenseTableSkeleton() {
   return (
     <div className="space-y-6">
-      {[1, 2].map((index) => (
+      {[1, 2, 3].map((index) => (
         <React.Fragment key={index}>
           <div className="flex items-center justify-between">
             <div className="space-y-2">
               <Skeleton className="h-8 w-[200px]" />
-            </div>
-            <div className="text-right space-y-2">
-              <Skeleton className="h-4 w-[100px] ml-auto" />
-              <Skeleton className="h-8 w-[150px]" />
             </div>
           </div>
           <div className="space-y-4">

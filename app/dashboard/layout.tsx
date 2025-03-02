@@ -1,3 +1,5 @@
+"use client";
+
 import { AppSidebar } from "@/components/app-sidebar";
 import {
   Breadcrumb,
@@ -13,6 +15,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { usePathname } from "next/navigation";
 import React from "react";
 
 export default function DashboardLayout({
@@ -20,6 +23,12 @@ export default function DashboardLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const pathname = usePathname();
+
+  // Determine the current page based on the pathname
+  const isActivityTracker = pathname === "/dashboard/activity-tracker";
+  const currentPage = isActivityTracker ? "Activity Tracker" : "Budget Tracker";
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -31,11 +40,11 @@ export default function DashboardLayout({
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
-                  <BreadcrumbLink href="#">Dashboard</BreadcrumbLink>
+                  <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Budget Tracker</BreadcrumbPage>
+                  <BreadcrumbPage>{currentPage}</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>

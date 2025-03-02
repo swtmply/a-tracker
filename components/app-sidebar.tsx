@@ -1,10 +1,11 @@
-"use client"
+"use client";
 
-import type * as React from "react"
-import { Command, DollarSign, Activity } from "lucide-react"
+import type * as React from "react";
+import { Command, DollarSign, Activity } from "lucide-react";
+import { usePathname } from "next/navigation";
 
-import { NavMain } from "./nav-main"
-import { NavUser } from "./nav-user"
+import { NavMain } from "./nav-main";
+import { NavUser } from "./nav-user";
 import {
   Sidebar,
   SidebarContent,
@@ -13,30 +14,33 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
-
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  navMain: [
-    {
-      title: "Budget Tracker",
-      url: "#",
-      icon: DollarSign,
-      isActive: true,
-    },
-    {
-      title: "Activity Tracker",
-      url: "#",
-      icon: Activity,
-    },
-  ],
-}
+} from "@/components/ui/sidebar";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const pathname = usePathname();
+
+  const data = {
+    user: {
+      name: "shadcn",
+      email: "m@example.com",
+      avatar: "/avatars/shadcn.jpg",
+    },
+    navMain: [
+      {
+        title: "Budget Tracker",
+        url: "/dashboard",
+        icon: DollarSign,
+        isActive: pathname === "/dashboard",
+      },
+      {
+        title: "Activity Tracker",
+        url: "/dashboard/activity-tracker",
+        icon: Activity,
+        isActive: pathname === "/dashboard/activity-tracker",
+      },
+    ],
+  };
+
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
@@ -63,6 +67,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavUser user={data.user} />
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }
-
