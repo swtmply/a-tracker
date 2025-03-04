@@ -6,25 +6,11 @@ import { Category, ExpenseWithCategories, Transactions } from "@/types/budget";
 import { CellContext, ColumnDef } from "@tanstack/react-table";
 import React from "react";
 import TransactionDetailsDialog from "./dialogs/transaction-details-dialog";
+import { months } from "@/lib/constants";
 
 interface ExpenseTableProps {
   expenses: ExpenseWithCategories[];
 }
-
-const months = [
-  "jan",
-  "feb",
-  "mar",
-  "apr",
-  "may",
-  "jun",
-  "jul",
-  "aug",
-  "sep",
-  "oct",
-  "nov",
-  "dec",
-];
 
 export function ExpenseTable({ expenses }: ExpenseTableProps) {
   const [transactions, setTransactions] = React.useState<Transactions[]>([]);
