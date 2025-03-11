@@ -15,6 +15,13 @@
       "when": 1740470722292,
       "tag": "0001_young_greymalkin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1741505867990,
+      "tag": "0002_motionless_bastion",
+      "breakpoints": true
     }
   ]
 }

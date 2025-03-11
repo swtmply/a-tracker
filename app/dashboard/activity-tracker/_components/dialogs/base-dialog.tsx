@@ -12,21 +12,20 @@ import {
 } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
 import React from "react";
-import { ExpenseForm } from "./expense-form";
-import { CategoryForm } from "./category-form";
-import { TransactionForm } from "./transaction-form";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
-import { ExpenseWithCategories } from "@/types/budget";
+import { ActivityForm } from "./activity-form";
+import { EntryForm } from "./entry-form";
+import { ActivityWithEntries } from "@/types/activity";
 
-type FormType = "expense" | "category" | "transaction";
+type FormType = "activity" | "entry";
 
 type BaseDialogProps = {
-  expenses: ExpenseWithCategories[];
+  activities: ActivityWithEntries[];
 };
 
-export function BaseDialog({ expenses }: BaseDialogProps) {
-  const [formType, setFormType] = React.useState<FormType>("expense");
+export function BaseDialog({ activities }: BaseDialogProps) {
+  const [formType, setFormType] = React.useState<FormType>("activity");
   const [isOpen, setIsOpen] = React.useState(false);
   const router = useRouter();
 
@@ -36,9 +35,8 @@ export function BaseDialog({ expenses }: BaseDialogProps) {
   };
 
   const formComponent = {
-    expense: <ExpenseForm onClose={onClose} />,
-    category: <CategoryForm onClose={onClose} expenses={expenses} />,
-    transaction: <TransactionForm onClose={onClose} expenses={expenses} />,
+    activity: <ActivityForm onClose={onClose} />,
+    entry: <EntryForm onClose={onClose} activities={activities} />,
   };
 
   return (
@@ -51,7 +49,7 @@ export function BaseDialog({ expenses }: BaseDialogProps) {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create from budget tracker</DialogTitle>
+          <DialogTitle>Create from activity tracker</DialogTitle>
           <DialogDescription>
             Select an option below to create a new item.
           </DialogDescription>
@@ -61,32 +59,22 @@ export function BaseDialog({ expenses }: BaseDialogProps) {
           <Badge
             className={cn(
               "cursor-pointer hover:border-blue-500 hover:text-blue-700",
-              formType === "expense" && "border-blue-500 text-blue-700"
+              formType === "activity" && "border-blue-500 text-blue-700"
             )}
-            onClick={() => setFormType("expense")}
+            onClick={() => setFormType("activity")}
             variant={"outline"}
           >
-            Expense
+            Activity
           </Badge>
           <Badge
             className={cn(
               "cursor-pointer hover:border-blue-500 hover:text-blue-700",
-              formType === "category" && "border-blue-500 text-blue-700"
+              formType === "entry" && "border-blue-500 text-blue-700"
             )}
-            onClick={() => setFormType("category")}
+            onClick={() => setFormType("entry")}
             variant={"outline"}
           >
-            Category
-          </Badge>
-          <Badge
-            className={cn(
-              "cursor-pointer hover:border-blue-500 hover:text-blue-700",
-              formType === "transaction" && "border-blue-500 text-blue-700"
-            )}
-            onClick={() => setFormType("transaction")}
-            variant={"outline"}
-          >
-            Transaction
+            Entry
           </Badge>
         </div>
 
